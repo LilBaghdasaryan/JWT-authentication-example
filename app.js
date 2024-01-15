@@ -1,39 +1,26 @@
 const express = require('express');
 const authRoutes = require('./routes/authRoutes');
-require('./helpers/init_mongodb')
-
+require('./helpers/init_mongodb');
+const { requireAuth, checkUser } = require('./middlware/authMiddleWare');
 const app = express();
+const cookieParser = require('cookie-parser');
+
 
 //middleware
 
 app.use(express.static('public'));
 app.use(express.json());
+app.use(cookieParser());
 
 //view engine
 app.set('view engine', 'ejs');
 
 
 //routes
+app.get('*', checkUser)
 app.get('/', (req, res) => res.render('home'));
-app.get('/smoothies', (req, res) => res.render('smoothies'));
+app.get('/smoothies', requireAuth, (req, res) => res.render('smoothies'));
 app.use(authRoutes)
 app.listen(3000, () => {
-    console.log('Connected to port 3000')
-})
-
-//cookies
-const cookieParser = require('cookie-parser');
-app.use(cookieParser());
-
-app.get('/set-cookie', (req, res) => {
-    res.cookie('newUser', false);
-    res.cookie('isEmployee', true, {maxAge: 1000 * 60 * 60 * 24, httpOnly: true });
-
-    res.send('you got the cookies')
-});
-
-app.get('/read-cookie', (req, res) => {
-    const cookies = req.cookies;
-    console.log(cookies, 'cookies');
-    res.json(cookies);
+    console.log('Connected to port 3000');
 })

@@ -21,6 +21,7 @@ const userSchema = new mongoose.Schema({
 // fire a function after doc saved to db
 
 userSchema.post('save' , function(doc, next){
+    console.log('model');
     console.log('new user was created and saved', doc);
     next();
 });
@@ -32,6 +33,20 @@ userSchema.pre('save', async function( next ){
     this.password = await bycrypt.hash(this.password, salt);
     next();
 });
+
+//create login static
+
+userSchema.statics.login = async function(email, password) {
+    const user = await this.findOne({email});
+    if(user){
+        const auth = await bycrypt.compare(password, user.password);
+        if(auth){
+            return user
+        }
+        throw Error('Password isnt match')
+    }
+    throw Error('Email isnt match')
+}
 
 const User = mongoose.model('user', userSchema);
 
